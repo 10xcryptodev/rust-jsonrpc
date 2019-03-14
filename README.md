@@ -23,7 +23,7 @@ struct MyStruct {
 
 fn main() {
     // The two Nones are for user/pass for authentication
-    let mut client = jsonrpc::client::Client::new("example.org".to_owned(), None, None);
+    let mut client = jsonrpc::client::Client::new("example.org".to_owned(), None);
     let request = client.build_request("getmystruct".to_owned(), serde_json::json!());
     match client.send_request(&request).and_then(|res| res.into_result::<MyStruct>()) {
         Ok(mystruct) => // Ok!

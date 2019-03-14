@@ -24,7 +24,7 @@ use std::sync::{Arc, Mutex};
 
 use hyper;
 use hyper::client::Client as HyperClient;
-use hyper::header::{Authorization, Basic, ContentType, Headers};
+use hyper::header::{Authorization, Bearer, ContentType, Headers};
 use serde;
 use serde_json;
 
@@ -34,22 +34,17 @@ use error::Error;
 /// A handle to a remote JSONRPC server
 pub struct Client {
     url: String,
-    user: Option<String>,
-    pass: Option<String>,
+    token: Option<String>,
     client: HyperClient,
     nonce: Arc<Mutex<u64>>,
 }
 
 impl Client {
     /// Creates a new client
-    pub fn new(url: String, user: Option<String>, pass: Option<String>) -> Client {
-        // Check that if we have a password, we have a username; other way around is ok
-        debug_assert!(pass.is_none() || user.is_some());
-
+    pub fn new(url: String, token: Option<String>) -> Client {
         Client {
-            url: url,
-            user: user,
-            pass: pass,
+            url,
+            token,
             client: HyperClient::new(),
             nonce: Arc::new(Mutex::new(0)),
         }
@@ -75,10 +70,9 @@ impl Client {
         // Setup connection
         let mut headers = Headers::new();
         headers.set(ContentType::json());
-        if let Some(ref user) = self.user {
-            headers.set(Authorization(Basic {
-                username: user.clone(),
-                password: self.pass.clone(),
+        if let Some(ref token) = self.token {
+            headers.set(Authorization(Bearer {
+                token: token.clone(),
             }));
         }
 
@@ -151,7 +145,7 @@ mod tests {
 
     #[test]
     fn sanity() {
-        let client = Client::new("localhost".to_owned(), None, None);
+        let client = Client::new("localhost".to_owned(), None);
         assert_eq!(client.last_nonce(), 0);
         let req1 = client.build_request("test", json!(""));
         assert_eq!(client.last_nonce(), 1);
