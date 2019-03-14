@@ -10,7 +10,9 @@ example code
 ```rust
 extern crate jsonrpc;
 extern crate serde;
+extern crate serde;
 #[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
 
 #[derive(Deserialize)]
 struct MyStruct {
@@ -22,7 +24,7 @@ struct MyStruct {
 fn main() {
     // The two Nones are for user/pass for authentication
     let mut client = jsonrpc::client::Client::new("example.org".to_owned(), None, None);
-    let request = client.build_request("getmystruct".to_owned(), vec![]);
+    let request = client.build_request("getmystruct".to_owned(), serde_json::json!());
     match client.send_request(&request).and_then(|res| res.into_result::<MyStruct>()) {
         Ok(mystruct) => // Ok!
         Err(e) => // Not so much.
@@ -30,4 +32,3 @@ fn main() {
 }
 
 ```
-
