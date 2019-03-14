@@ -59,7 +59,7 @@ impl Client {
     pub fn do_rpc<T: for<'a> serde::de::Deserialize<'a>>(
         &self,
         rpc_name: &str,
-        args: &[serde_json::value::Value],
+        args: serde_json::value::Value,
     ) -> Result<T, Error> {
         let request = self.build_request(rpc_name, args);
         let response = self.send_request(&request)?;
@@ -127,11 +127,7 @@ impl Client {
     }
 
     /// Builds a request
-    pub fn build_request<'a, 'b>(
-        &self,
-        name: &'a str,
-        params: &'b [serde_json::Value],
-    ) -> Request<'a, 'b> {
+    pub fn build_request<'a>(&self, name: &'a str, params: serde_json::Value) -> Request<'a> {
         let mut nonce = self.nonce.lock().unwrap();
         *nonce += 1;
         Request {
@@ -151,14 +147,15 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn sanity() {
         let client = Client::new("localhost".to_owned(), None, None);
         assert_eq!(client.last_nonce(), 0);
-        let req1 = client.build_request("test", &[]);
+        let req1 = client.build_request("test", json!(""));
         assert_eq!(client.last_nonce(), 1);
-        let req2 = client.build_request("test", &[]);
+        let req2 = client.build_request("test", json!(""));
         assert_eq!(client.last_nonce(), 2);
         assert!(req1 != req2);
     }
